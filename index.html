@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Medicamentos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pastelPink: '#FFD6E0',
+                        pastelPinkDark: '#F7A8B8',
+                        pastelYellow: '#FFF3B0',
+                        pastelYellowDark: '#E2C262',
+                        pastelBlue: '#C1E7E3',
+                        pastelBlueDark: '#81C7C0',
+                        pastelGreen: '#E2F0CB',
+                        pastelGreenDark: '#96CEB4',
+                        pastelPurple: '#E8DFF5',
+                        pastelPurpleDark: '#B298DC',
+                        softBg: '#FAF7F2'
+                    },
+                    fontFamily: {
+                        display: ['Fredoka', 'sans-serif'],
+                        body: ['Quicksand', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: #FAF7F2;
+            background-image: radial-gradient(#e5e0d8 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .font-display {
+            font-family: 'Fredoka', sans-serif;
+        }
+        .custom-shadow {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
+        }
+        .stripe-row:nth-child(even) {
+            background-color: #F4FAF8;
+        }
+        .stripe-row:nth-child(odd) {
+            background-color: #ffffff;
+        }
+        /* Custom Checkbox Animation */
+        .care-checkbox:checked + div {
+            background-color: #E2F0CB;
+            border-color: #96CEB4;
+        }
+    </style>
+</head>
+<body class="text-gray-700 min-h-screen pb-12">
+
+    <header class="bg-white border-b-4 border-pastelPink shadow-sm mb-6 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 rounded-2xl bg-pastelBlue flex items-center justify-center text-pastelBlueDark text-2xl shadow-sm border-2 border-white">
+                    <i class="fa-solid fa-notes-medical"></i>
+                </div>
+                <div>
+                    <h1 class="font-display text-2xl sm:text-3xl font-bold text-gray-800 tracking-wide flex items-center gap-2">
+                        Controle de Medicamentos
+                    </h1>
+                    <p class="text-xs text-gray-500 font-medium">Seu diário fofo e organizado de cuidados com a saúde</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 bg-pastelYellow/50 px-4 py-2 rounded-2xl border border-pastelYellow">
+                <i class="fa-solid fa-calendar-day text-yellow-600"></i>
+                <span id="currentDateDisplay" class="font-bold text-sm text-gray-700">--/--/----</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Quick Log Panel -->
+            <div class="lg:col-span-1 bg-white rounded-3xl p-6 border-2 border-pastelPink custom-shadow flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center space-x-2 mb-4">
+                        <span class="w-8 h-8 rounded-full bg-pastelPink text-pink-600 flex items-center justify-center font-bold text-sm">
+                            <i class="fa-solid fa-check"></i>
+                        </span>
+                        <h2 class="font-display text-xl font-bold text-gray-800">Registrar Dose Tomada</h2>
+                    </div>
+                    <p class="text-xs text-gray-500 mb-4">Selecione o medicamento e o momento em que tomou para registrar no histórico.</p>
+                    
+                    <form id="quickLogForm" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Medicamento</label>
+                            <select id="logMedSelect" required class="w-full px-4 py-2.5 rounded-xl border-2 border-gray-100 focus:border-pastelPink focus:outline-none text-sm bg-gray-50/50">
+                                <option value="">Nenhum medicamento cadastrado</option>
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-600 mb-1">Data</label>
+                                <input type="date" id="logDate" required class="w-full px-3 py-2 rounded-xl border-2 border-gray-100 focus:border-pastelPink focus:outline-none text-xs bg-gray-50/50">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-600 mb-1">Horário Exato</label>
+                                <input type="time" id="logTime" required class="w-full px-3 py-2 rounded-xl border-2 border-gray-100 focus:border-pastelPink focus:outline-none text-xs bg-gray-50/50">
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full py-3 bg-pastelPink hover:bg-pastelPinkDark text-pink-900 font-bold rounded-2xl transition duration-200 flex items-center justify-center gap-2 shadow-sm text-sm mt-2">
+                            <i class="fa-solid fa-capsules"></i> Registrar Tomada
+                        </button>
+                    </form>
+                </div>
+
+                <div id="quickLogAlert" class="hidden mt-4 p-3 rounded-xl text-xs font-medium text-center"></div>
+            </div>
+
+            <!-- Add/Edit Medication Form -->
+            <div class="lg:col-span-2 bg-white rounded-3xl p-6 border-2 border-pastelBlue custom-shadow">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-2">
+                        <span id="formBadge" class="w-8 h-8 rounded-full bg-pastelBlue text-teal-700 flex items-center justify-center font-bold text-sm">
+                            <i id="formIcon" class="fa-solid fa-plus"></i>
+                        </span>
+                        <h2 id="formTitle" class="font-display text-xl font-bold text-gray-800">Cadastrar Novo Medicamento</h2>
+                    </div>
+                    <button id="cancelEditBtn" type="button" onclick="cancelEdit()" class="hidden text-xs text-red-500 font-bold hover:underline">
+                        <i class="fa-solid fa-xmark"></i> Cancelar Edição
+                    </button>
+                </div>
+
+                <form id="medForm" class="space-y-4">
+                    <input type="hidden" id="editingMedId" value="">
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Nome do Medicamento *</label>
+                            <input type="text" id="medName" placeholder="Ex: Amoxicilina, Paracetamol..." required class="w-full px-4 py-2 rounded-xl border-2 border-gray-100 focus:border-pastelBlue focus:outline-none text-sm bg-gray-50/50">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Dosagem *</label>
+                            <input type="text" id="medDosage" placeholder="Ex: 500mg, 1 comprimido" required class="w-full px-4 py-2 rounded-xl border-2 border-gray-100 focus:border-pastelBlue focus:outline-none text-sm bg-gray-50/50">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Horário Principal / Intervalo *</label>
+                            <input type="text" id="medSchedule" placeholder="Ex: 08:00 ou De 8/8h" required class="w-full px-4 py-2 rounded-xl border-2 border-gray-100 focus:border-pastelBlue focus:outline-none text-sm bg-gray-50/50">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Data de Início *</label>
+                            <input type="date" id="medStartDate" required class="w-full px-4 py-2 rounded-xl border-2 border-gray-100 focus:border-pastelBlue focus:outline-none text-sm bg-gray-50/50">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Data do Fim</label>
+                            <input type="date" id="medEndDate" class="w-full px-4 py-2 rounded-xl border-2 border-gray-100 focus:border-pastelBlue focus:outline-none text-sm bg-gray-50/50">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">Observações / Recomendações</label>
+                        <input type="text" id="medNotes" placeholder="Ex: Tomar após as refeições" class="w-full px-4 py-2 rounded-xl border-2 border-gray-100 focus:border-pastelBlue focus:outline-none text-sm bg-gray-50/50">
+                    </div>
+
+                    <div class="flex justify-end gap-2">
+                        <button type="submit" id="saveMedBtn" class="px-6 py-2.5 bg-pastelBlue hover:bg-pastelBlueDark text-teal-900 font-bold rounded-2xl transition duration-200 shadow-sm flex items-center gap-2 text-sm">
+                            <i class="fa-solid fa-floppy-disk"></i> <span id="saveMedBtnText">Salvar Medicamento</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Main Table Section -->
+        <section class="bg-white rounded-3xl p-6 border-2 border-pastelYellow custom-shadow overflow-hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div class="flex items-center space-x-3">
+                    <span class="w-10 h-10 rounded-2xl bg-pastelYellow text-yellow-700 flex items-center justify-center font-bold text-lg">
+                        <i class="fa-solid fa-table-list"></i>
+                    </span>
+                    <div>
+                        <h2 class="font-display text-2xl font-bold text-gray-800">Quadro Principal de Medicamentos</h2>
+                        <p class="text-xs text-gray-500">Acompanhamento dos seus medicamentos e rotina de doses</p>
+                    </div>
+                </div>
+
+                <!-- Sort Control -->
+                <div class="flex items-center gap-2 bg-gray-50 p-2 rounded-2xl border border-gray-200">
+                    <i class="fa-solid fa-sort text-gray-500 text-xs pl-2"></i>
+                    <span class="text-xs font-bold text-gray-600">Ordenar por:</span>
+                    <select id="sortOption" onchange="changeSortOption(this.value)" class="bg-white border border-gray-200 rounded-xl px-3 py-1 text-xs font-semibold focus:outline-none text-gray-700">
+                        <option value="name">Ordem Alfabética (A-Z)</option>
+                        <option value="schedule">Horário Agendado</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Table Responsive Container -->
+            <div class="overflow-x-auto rounded-2xl border border-gray-100">
+                <table class="w-full text-left border-collapse min-w-[900px]">
+                    <thead>
+                        <tr class="text-xs font-bold uppercase tracking-wider text-gray-700 border-b border-gray-200">
+                            <th class="p-3 bg-pastelPink/70 text-center w-28 rounded-tl-xl"><i class="fa-regular fa-clock"></i> Horários</th>
+                            <th class="p-3 bg-pastelYellow/80 text-left">Nome do Medicamento</th>
+                            <th class="p-3 bg-pastelPurple/70 text-center w-32">Dosagem</th>
+                            <th class="p-3 bg-pastelGreen/70 text-center w-28">Data Início</th>
+                            <th class="p-3 bg-pastelGreen/70 text-center w-28">Data Fim</th>
+                            <th class="p-3 bg-pastelBlue/70 text-left">Observação</th>
+                            <th class="p-3 bg-pastelPink/40 text-center w-48">
+                                Controle
+                                <div class="flex justify-between px-2 pt-1 text-[11px] font-extrabold text-pink-700">
+                                    <span>D</span><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span>
+                                </div>
+                            </th>
+                            <th class="p-3 bg-gray-50 text-center w-24 rounded-tr-xl">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="medsTableBody" class="divide-y divide-gray-100 text-sm">
+                        <!-- Dynamic Rows -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            <!-- Next Scheduled Doses -->
+            <section class="bg-white rounded-3xl p-6 border-2 border-pastelGreen custom-shadow">
+                <div class="flex items-center space-x-3 mb-4">
+                    <span class="w-10 h-10 rounded-2xl bg-pastelGreen text-emerald-800 flex items-center justify-center font-bold text-lg">
+                        <i class="fa-solid fa-hourglass-half"></i>
+                    </span>
+                    <div>
+                        <h2 class="font-display text-xl font-bold text-gray-800">Próximos Consumos Estimados</h2>
+                        <p class="text-xs text-gray-500">Estimativas dos próximos horários com base na sua rotina</p>
+                    </div>
+                </div>
+
+                <div id="nextDosesList" class="space-y-3 max-h-80 overflow-y-auto pr-1">
+                    <!-- Dynamic next doses list -->
+                </div>
+            </section>
+
+            <!-- Log History and Evolution -->
+            <section class="bg-white rounded-3xl p-6 border-2 border-pastelPurple custom-shadow">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-3">
+                        <span class="w-10 h-10 rounded-2xl bg-pastelPurple text-purple-800 flex items-center justify-center font-bold text-lg">
+                            <i class="fa-solid fa-chart-line"></i>
+                        </span>
+                        <div>
+                            <h2 class="font-display text-xl font-bold text-gray-800">Histórico de Tomadas</h2>
+                            <p class="text-xs text-gray-500">Registro de evolução e confirmações recentes</p>
+                        </div>
+                    </div>
+                    <span id="totalLogsBadge" class="text-xs bg-pastelPurple text-purple-900 px-3 py-1 rounded-full font-bold">0 doses</span>
+                </div>
+
+                <div id="historyLogsList" class="space-y-3 max-h-80 overflow-y-auto pr-1">
+                    <!-- Dynamic history list -->
+                </div>
+            </section>
+
+        </div>
+
+    </main>
+
+    <!-- Modal para Pergunta de Cuidados e Frase Motivacional -->
+    <div id="careModal" class="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 hidden p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 border-4 border-pastelPink custom-shadow animate-fade-in relative">
+            <div class="text-center space-y-4">
+                <div class="w-16 h-16 bg-pastelPink rounded-full flex items-center justify-center text-pink-600 text-3xl mx-auto shadow-inner">
+                    <i class="fa-solid fa-heart-pulse"></i>
+                </div>
+                
+                <h3 class="font-display text-2xl font-bold text-gray-800">Dose Registrada com Sucesso!</h3>
+
+                <!-- Frase Motivacional -->
+                <div class="bg-pastelYellow/50 border border-pastelYellow rounded-2xl p-4 text-sm font-semibold text-amber-900 italic">
+                    "<span id="motivationalQuote">Você está fazendo um ótimo trabalho cuidando de você!</span>"
+                </div>
+
+                <div class="text-left space-y-3 pt-2">
+                    <p class="text-xs font-bold text-gray-600 uppercase tracking-wider text-center">Check-list de Autocuidado:</p>
+
+                    <label class="flex items-center gap-3 p-3 rounded-2xl border-2 border-gray-100 hover:border-pastelGreen cursor-pointer transition">
+                        <input type="checkbox" id="checkAte" class="care-checkbox hidden">
+                        <div class="w-6 h-6 rounded-lg border-2 border-gray-300 flex items-center justify-center text-emerald-600 font-bold transition">
+                            <i class="fa-solid fa-check text-xs hidden"></i>
+                        </div>
+                        <span class="text-sm font-medium text-gray-700">Já comeu alguma coisa para acompanhar? 🥪</span>
+                    </label>
+
+                    <label class="flex items-center gap-3 p-3 rounded-2xl border-2 border-gray-100 hover:border-pastelBlue cursor-pointer transition">
+                        <input type="checkbox" id="checkWater" class="care-checkbox hidden">
+                        <div class="w-6 h-6 rounded-lg border-2 border-gray-300 flex items-center justify-center text-teal-600 font-bold transition">
+                            <i class="fa-solid fa-check text-xs hidden"></i>
+                        </div>
+                        <span class="text-sm font-medium text-gray-700">Tomou bastante água? 💧</span>
+                    </label>
+                </div>
+
+                <button onclick="closeCareModal()" class="w-full py-3 bg-pastelGreen hover:bg-pastelGreenDark text-emerald-950 font-bold rounded-2xl transition duration-200 shadow-sm text-sm mt-4">
+                    Concluir Registros <i class="fa-solid fa-face-smile ml-1"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data Structures
+        let medications = [];
+        let logs = [];
+        let currentSort = 'name'; // 'name' or 'schedule'
+        let pendingLogData = null;
+
+        // Frases Motivacionais de Apoio
+        const motivationalQuotes = [
+            "Cada dose tomada é um passo de amor-próprio e cuidado com a sua saúde!",
+            "Você é mais forte do que pensa e seu corpo agradece esse carinho!",
+            "Parabéns pelo compromisso com seu bem-estar. Continue firme!",
+            "Pequenos hábitos diários constroem uma vida saudável e feliz!",
+            "Cuidar de você é a prioridade mais importante. Você está no caminho certo!",
+            "Orgulhe-se de cada pequeno passo no seu tratamento!",
+            "Mantenha o foco! O cuidado constante de hoje traz a saúde de amanhã.",
+            "Um dia de cada vez, um cuidado de cada vez. Você está indo super bem!",
+            "Seu corpo é seu lar: cuide bem dele com todo esse amor!"
+        ];
+
+        // DOM Elements
+        const medForm = document.getElementById('medForm');
+        const quickLogForm = document.getElementById('quickLogForm');
+        const medsTableBody = document.getElementById('medsTableBody');
+        const logMedSelect = document.getElementById('logMedSelect');
+        const historyLogsList = document.getElementById('historyLogsList');
+        const nextDosesList = document.getElementById('nextDosesList');
+        const currentDateDisplay = document.getElementById('currentDateDisplay');
+        const quickLogAlert = document.getElementById('quickLogAlert');
+
+        // Form elements for editing
+        const formTitle = document.getElementById('formTitle');
+        const formIcon = document.getElementById('formIcon');
+        const formBadge = document.getElementById('formBadge');
+        const saveMedBtnText = document.getElementById('saveMedBtnText');
+        const editingMedId = document.getElementById('editingMedId');
+        const cancelEditBtn = document.getElementById('cancelEditBtn');
+
+        // Initialize App
+        window.addEventListener('DOMContentLoaded', () => {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
+            currentDateDisplay.textContent = dateStr;
+
+            document.getElementById('logDate').value = now.toISOString().split('T')[0];
+            document.getElementById('logTime').value = now.toTimeString().substring(0, 5);
+            document.getElementById('medStartDate').value = now.toISOString().split('T')[0];
+
+            loadDataFromStorage();
+            renderAll();
+            setupCheckboxStyle();
+        });
+
+        function setupCheckboxStyle() {
+            document.querySelectorAll('.care-checkbox').forEach(chk => {
+                chk.addEventListener('change', (e) => {
+                    const icon = e.target.nextElementSibling.querySelector('i');
+                    if (e.target.checked) {
+                        icon.classList.remove('hidden');
+                    } else {
+                        icon.classList.add('hidden');
+                    }
+                });
+            });
+        }
+
+        // Load & Save to LocalStorage
+        function loadDataFromStorage() {
+            const savedMeds = localStorage.getItem('meds_app_medications');
+            const savedLogs = localStorage.getItem('meds_app_logs');
+
+            if (savedMeds) {
+                try { medications = JSON.parse(savedMeds); } catch(e) { medications = []; }
+            } else {
+                // Sample initial data if empty
+                medications = [
+                    {
+                        id: '1',
+                        name: 'Vitamina C',
+                        dosage: '1000mg',
+                        schedule: '08:00',
+                        startDate: new Date().toISOString().split('T')[0],
+                        endDate: '',
+                        notes: 'Tomar no café da manhã'
+                    },
+                    {
+                        id: '2',
+                        name: 'Omega 3',
+                        dosage: '1 cápsula',
+                        schedule: '12:00',
+                        startDate: new Date().toISOString().split('T')[0],
+                        endDate: '',
+                        notes: 'Junto com as refeições'
+                    }
+                ];
+                saveMedsStorage();
+            }
+
+            if (savedLogs) {
+                try { logs = JSON.parse(savedLogs); } catch(e) { logs = []; }
+            }
+        }
+
+        function saveMedsStorage() {
+            localStorage.setItem('meds_app_medications', JSON.stringify(medications));
+        }
+
+        function saveLogsStorage() {
+            localStorage.setItem('meds_app_logs', JSON.stringify(logs));
+        }
+
+        // Add or Update Medication
+        medForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const id = editingMedId.value;
+
+            const name = document.getElementById('medName').value.trim();
+            const dosage = document.getElementById('medDosage').value.trim();
+            const schedule = document.getElementById('medSchedule').value.trim();
+            const startDate = document.getElementById('medStartDate').value;
+            const endDate = document.getElementById('medEndDate').value;
+            const notes = document.getElementById('medNotes').value.trim();
+
+            if (id) {
+                // Edit existing
+                const index = medications.findIndex(m => m.id === id);
+                if (index !== -1) {
+                    medications[index] = { id, name, dosage, schedule, startDate, endDate, notes };
+                    showAlert(`Medicamento "${name}" atualizado com sucesso!`, 'success');
+                }
+            } else {
+                // Create new
+                const newMed = {
+                    id: Date.now().toString(),
+                    name,
+                    dosage,
+                    schedule,
+                    startDate,
+                    endDate,
+                    notes
+                };
+                medications.push(newMed);
+                showAlert(`Medicamento "${name}" cadastrado com sucesso!`, 'success');
+            }
+
+            saveMedsStorage();
+            cancelEdit();
+            renderAll();
+        });
+
+        // Edit Medication Trigger
+        function editMedication(id) {
+            const med = medications.find(m => m.id === id);
+            if (!med) return;
+
+            editingMedId.value = med.id;
+            document.getElementById('medName').value = med.name;
+            document.getElementById('medDosage').value = med.dosage;
+            document.getElementById('medSchedule').value = med.schedule;
+            document.getElementById('medStartDate').value = med.startDate;
+            document.getElementById('medEndDate').value = med.endDate || '';
+            document.getElementById('medNotes').value = med.notes || '';
+
+            // Update Form Header
+            formTitle.textContent = 'Editar Medicamento';
+            formIcon.className = 'fa-solid fa-pen-to-square';
+            formBadge.className = 'w-8 h-8 rounded-full bg-pastelYellow text-yellow-800 flex items-center justify-center font-bold text-sm';
+            saveMedBtnText.textContent = 'Atualizar Medicamento';
+            cancelEditBtn.classList.remove('hidden');
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function cancelEdit() {
+            editingMedId.value = '';
+            medForm.reset();
+            document.getElementById('medStartDate').value = new Date().toISOString().split('T')[0];
+
+            formTitle.textContent = 'Cadastrar Novo Medicamento';
+            formIcon.className = 'fa-solid fa-plus';
+            formBadge.className = 'w-8 h-8 rounded-full bg-pastelBlue text-teal-700 flex items-center justify-center font-bold text-sm';
+            saveMedBtnText.textContent = 'Salvar Medicamento';
+            cancelEditBtn.classList.add('hidden');
+        }
+
+        // Log Taken Dose (Triggers Modal with Motivational Quote & Checkboxes)
+        quickLogForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const medId = logMedSelect.value;
+            if (!medId) return;
+
+            const selectedMed = medications.find(m => m.id === medId);
+            const date = document.getElementById('logDate').value;
+            const time = document.getElementById('logTime').value;
+
+            pendingLogData = {
+                id: Date.now().toString(),
+                medId: selectedMed.id,
+                medName: selectedMed.name,
+                dosage: selectedMed.dosage,
+                timestamp: new Date(`${date}T${time}`).getTime(),
+                dateStr: date,
+                timeStr: time,
+                ate: false,
+                water: false
+            };
+
+            // Random motivational quote
+            const randomQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
+            document.getElementById('motivationalQuote').textContent = randomQuote;
+
+            // Reset modal checkboxes
+            document.getElementById('checkAte').checked = false;
+            document.getElementById('checkWater').checked = false;
+            document.querySelectorAll('#careModal i.fa-check').forEach(i => i.classList.add('hidden'));
+
+            // Show modal
+            document.getElementById('careModal').classList.remove('hidden');
+        });
+
+        function closeCareModal() {
+            if (pendingLogData) {
+                pendingLogData.ate = document.getElementById('checkAte').checked;
+                pendingLogData.water = document.getElementById('checkWater').checked;
+
+                logs.unshift(pendingLogData);
+                saveLogsStorage();
+
+                showAlert(`Dose de ${pendingLogData.medName} registrada com sucesso!`, 'success');
+                pendingLogData = null;
+                renderAll();
+            }
+            document.getElementById('careModal').classList.add('hidden');
+        }
+
+        // Sort Control
+        function changeSortOption(option) {
+            currentSort = option;
+            renderMedsTable();
+        }
+
+        // Delete Medication
+        function deleteMedication(id) {
+            if (confirm('Deseja realmente remover este medicamento do seu quadro?')) {
+                medications = medications.filter(m => m.id !== id);
+                saveMedsStorage();
+                renderAll();
+            }
+        }
+
+        // Delete Log
+        function deleteLog(id) {
+            logs = logs.filter(l => l.id !== id);
+            saveLogsStorage();
+            renderAll();
+        }
+
+        // Render functions
+        function renderAll() {
+            renderMedsTable();
+            renderSelectOptions();
+            renderHistoryLogs();
+            renderNextPredictions();
+        }
+
+        function renderMedsTable() {
+            medsTableBody.innerHTML = '';
+
+            if (medications.length === 0) {
+                medsTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="p-8 text-center text-gray-400 font-medium">
+                            Nenhum medicamento cadastrado no momento. Use o formulário acima para adicionar!
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            // Sort Medications List
+            let sortedMeds = [...medications];
+            if (currentSort === 'name') {
+                sortedMeds.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' }));
+            } else if (currentSort === 'schedule') {
+                sortedMeds.sort((a, b) => a.schedule.localeCompare(b.schedule, 'pt-BR', { numeric: true }));
+            }
+
+            const today = new Date();
+            const currentWeekDays = getDaysOfWeek(today);
+
+            sortedMeds.forEach(med => {
+                const tr = document.createElement('tr');
+                tr.className = 'stripe-row transition hover:bg-yellow-50/40';
+
+                const startFormatted = med.startDate ? formatDatePt(med.startDate) : '-';
+                const endFormatted = med.endDate ? formatDatePt(med.endDate) : 'Contínuo';
+
+                // Check logged days for week indicator (D S T Q Q S S)
+                const weekDots = currentWeekDays.map(d => {
+                    const hasLogged = logs.some(l => l.medId === med.id && l.dateStr === d.iso);
+                    const colorClass = hasLogged ? 'bg-emerald-400 ring-2 ring-emerald-200' : 'bg-gray-200';
+                    return `<span class="w-3.5 h-3.5 rounded-full inline-block ${colorClass}" title="${d.label} (${d.iso}) - ${hasLogged ? 'Tomado' : 'Não registrado'}"></span>`;
+                }).join('');
+
+                tr.innerHTML = `
+                    <td class="p-3 text-center font-bold text-xs text-pink-700 bg-pink-50/30">${escapeHtml(med.schedule)}</td>
+                    <td class="p-3 font-semibold text-gray-800">${escapeHtml(med.name)}</td>
+                    <td class="p-3 text-center text-xs text-gray-600 font-medium">${escapeHtml(med.dosage)}</td>
+                    <td class="p-3 text-center text-xs text-gray-500">${startFormatted}</td>
+                    <td class="p-3 text-center text-xs text-gray-500">${endFormatted}</td>
+                    <td class="p-3 text-xs text-gray-600 italic">${escapeHtml(med.notes || '-')}</td>
+                    <td class="p-3 text-center">
+                        <div class="flex justify-between items-center px-1">
+                            ${weekDots}
+                        </div>
+                    </td>
+                    <td class="p-3 text-center">
+                        <div class="flex items-center justify-center space-x-2">
+                            <button onclick="editMedication('${med.id}')" class="text-gray-400 hover:text-amber-600 transition p-1" title="Editar Medicamento">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            <button onclick="deleteMedication('${med.id}')" class="text-gray-400 hover:text-red-500 transition p-1" title="Excluir Medicamento">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                medsTableBody.appendChild(tr);
+            });
+        }
+
+        function renderSelectOptions() {
+            logMedSelect.innerHTML = '';
+            if (medications.length === 0) {
+                logMedSelect.innerHTML = '<option value="">Cadastre um medicamento primeiro</option>';
+                return;
+            }
+
+            // Always alphabetize in selector for ease of use
+            const sortedForSelect = [...medications].sort((a,b) => a.name.localeCompare(b.name));
+
+            sortedForSelect.forEach(med => {
+                const opt = document.createElement('option');
+                opt.value = med.id;
+                opt.textContent = `${med.name} (${med.dosage}) - ${med.schedule}`;
+                logMedSelect.appendChild(opt);
+            });
+        }
+
+        function renderHistoryLogs() {
+            historyLogsList.innerHTML = '';
+            document.getElementById('totalLogsBadge').textContent = `${logs.length} dose(s)`;
+
+            if (logs.length === 0) {
+                historyLogsList.innerHTML = `
+                    <div class="p-6 text-center text-gray-400 text-xs italic">
+                        Nenhum registro de dose tomada até o momento.
+                    </div>
+                `;
+                return;
+            }
+
+            logs.slice(0, 15).forEach(log => {
+                const item = document.createElement('div');
+                item.className = 'flex items-center justify-between p-3 rounded-2xl bg-pastelPurple/20 border border-pastelPurple/50 text-xs';
+                
+                const formattedDate = formatDatePt(log.dateStr);
+
+                const careBadges = [];
+                if (log.ate) careBadges.push('<span title="Comeu algo">🥪</span>');
+                if (log.water) careBadges.push('<span title="Tomou água">💧</span>');
+                const careHtml = careBadges.length > 0 ? `<span class="ml-2">${careBadges.join(' ')}</span>` : '';
+
+                item.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-xl bg-pastelPurple text-purple-700 flex items-center justify-center font-bold">
+                            <i class="fa-solid fa-check text-xs"></i>
+                        </div>
+                        <div>
+                            <span class="font-bold text-gray-800 text-sm block flex items-center">${escapeHtml(log.medName)} ${careHtml}</span>
+                            <span class="text-gray-500">${escapeHtml(log.dosage)} • <i class="fa-regular fa-clock"></i> ${log.timeStr}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <span class="font-medium text-purple-900 bg-white px-2.5 py-1 rounded-lg border border-purple-100">${formattedDate}</span>
+                        <button onclick="deleteLog('${log.id}')" class="text-gray-400 hover:text-red-500 transition">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                `;
+                historyLogsList.appendChild(item);
+            });
+        }
+
+        function renderNextPredictions() {
+            nextDosesList.innerHTML = '';
+
+            if (medications.length === 0) {
+                nextDosesList.innerHTML = `
+                    <div class="p-6 text-center text-gray-400 text-xs italic">
+                        Cadastre medicamentos para ver as previsões de próximas doses.
+                    </div>
+                `;
+                return;
+            }
+
+            const now = new Date();
+
+            medications.forEach(med => {
+                const lastLog = logs.find(l => l.medId === med.id);
+                let nextEstimateText = "";
+
+                if (lastLog) {
+                    const lastDate = new Date(lastLog.timestamp);
+                    const hoursDiff = Math.abs(now - lastDate) / 36e5;
+                    nextEstimateText = `Última dose há ${Math.floor(hoursDiff)}h (às ${lastLog.timeStr} de ${formatDatePt(lastLog.dateStr)})`;
+                } else {
+                    nextEstimateText = `Horário agendado: ${med.schedule}`;
+                }
+
+                const div = document.createElement('div');
+                div.className = 'p-3 rounded-2xl bg-pastelGreen/20 border border-pastelGreen/50 flex justify-between items-center text-xs';
+
+                div.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-xl bg-pastelGreen text-emerald-800 flex items-center justify-center font-bold">
+                            <i class="fa-solid fa-bell"></i>
+                        </div>
+                        <div>
+                            <span class="font-bold text-gray-800 text-sm block">${escapeHtml(med.name)}</span>
+                            <span class="text-gray-600">${nextEstimateText}</span>
+                        </div>
+                    </div>
+                    <span class="font-bold text-emerald-800 bg-white px-3 py-1 rounded-xl border border-emerald-100 shadow-xs">
+                        ${escapeHtml(med.schedule)}
+                    </span>
+                `;
+
+                nextDosesList.appendChild(div);
+            });
+        }
+
+        // Utilities
+        function getDaysOfWeek(refDate) {
+            const curr = new Date(refDate);
+            const first = curr.getDate() - curr.getDay(); // Sunday as first day
+            
+            const days = [];
+            const labels = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+
+            for (let i = 0; i < 7; i++) {
+                const nextDay = new Date(curr.setDate(first + i));
+                days.push({
+                    iso: nextDay.toISOString().split('T')[0],
+                    label: labels[i]
+                });
+            }
+            return days;
+        }
+
+        function formatDatePt(isoDate) {
+            if (!isoDate) return '-';
+            const parts = isoDate.split('-');
+            if (parts.length !== 3) return isoDate;
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>"']/g, (m) => {
+                return {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                }[m];
+            });
+        }
+
+        function showAlert(msg, type = 'success') {
+            quickLogAlert.textContent = msg;
+            quickLogAlert.className = type === 'success' 
+                ? 'mt-4 p-3 rounded-xl text-xs font-bold text-center bg-green-100 text-green-800 border border-green-200 block'
+                : 'mt-4 p-3 rounded-xl text-xs font-bold text-center bg-red-100 text-red-800 border border-red-200 block';
+
+            setTimeout(() => {
+                quickLogAlert.className = 'hidden';
+            }, 3500);
+        }
+    </script>
+</body>
+</html>
