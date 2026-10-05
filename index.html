@@ -51,11 +51,6 @@
         .stripe-row:nth-child(odd) {
             background-color: #ffffff;
         }
-        /* Custom Checkbox Animation */
-        .care-checkbox:checked + div {
-            background-color: #E2F0CB;
-            border-color: #96CEB4;
-        }
     </style>
 </head>
 <body class="text-gray-700 min-h-screen pb-12">
@@ -74,9 +69,19 @@
                 </div>
             </div>
 
-            <div class="flex items-center gap-2 bg-pastelYellow/50 px-4 py-2 rounded-2xl border border-pastelYellow">
-                <i class="fa-solid fa-calendar-day text-yellow-600"></i>
-                <span id="currentDateDisplay" class="font-bold text-sm text-gray-700">--/--/----</span>
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 bg-pastelYellow/50 px-3 py-1.5 rounded-2xl border border-pastelYellow text-xs">
+                    <i class="fa-solid fa-calendar-day text-yellow-600"></i>
+                    <span id="currentDateDisplay" class="font-bold text-gray-700">--/--/----</span>
+                </div>
+                <!-- Botoes de Backup -->
+                <button onclick="exportBackup()" title="Baixar Cópia de Segurança (JSON)" class="px-3 py-1.5 bg-pastelPurple hover:bg-pastelPurpleDark text-purple-900 text-xs font-bold rounded-2xl transition flex items-center gap-1.5 border border-purple-200">
+                    <i class="fa-solid fa-file-export"></i> Exportar Backup
+                </button>
+                <label title="Restaurar Cópia de Segurança (JSON)" class="px-3 py-1.5 bg-pastelGreen hover:bg-pastelGreenDark text-emerald-900 text-xs font-bold rounded-2xl transition flex items-center gap-1.5 border border-emerald-200 cursor-pointer">
+                    <i class="fa-solid fa-file-import"></i> Importar Backup
+                    <input type="file" id="importFileInput" accept=".json" class="hidden" onchange="importBackup(event)">
+                </label>
             </div>
         </div>
     </header>
@@ -94,7 +99,7 @@
                         </span>
                         <h2 class="font-display text-xl font-bold text-gray-800">Registrar Dose Tomada</h2>
                     </div>
-                    <p class="text-xs text-gray-500 mb-4">Selecione o medicamento e o momento em que tomou para registrar no histórico.</p>
+                    <p class="text-xs text-gray-500 mb-4">Selecione o medicamento e o momento em que você tomou para registrar seu histórico de adesão.</p>
                     
                     <form id="quickLogForm" class="space-y-4">
                         <div>
@@ -126,19 +131,19 @@
             <div class="lg:col-span-2 bg-white rounded-3xl p-6 border-2 border-pastelBlue custom-shadow">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center space-x-2">
-                        <span id="formBadge" class="w-8 h-8 rounded-full bg-pastelBlue text-teal-700 flex items-center justify-center font-bold text-sm">
+                        <span class="w-8 h-8 rounded-full bg-pastelBlue text-teal-700 flex items-center justify-center font-bold text-sm">
                             <i id="formIcon" class="fa-solid fa-plus"></i>
                         </span>
                         <h2 id="formTitle" class="font-display text-xl font-bold text-gray-800">Cadastrar Novo Medicamento</h2>
                     </div>
-                    <button id="cancelEditBtn" type="button" onclick="cancelEdit()" class="hidden text-xs text-red-500 font-bold hover:underline">
+                    <button id="cancelEditBtn" type="button" onclick="resetMedForm()" class="hidden text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold px-3 py-1.5 rounded-xl transition">
                         <i class="fa-solid fa-xmark"></i> Cancelar Edição
                     </button>
                 </div>
 
                 <form id="medForm" class="space-y-4">
                     <input type="hidden" id="editingMedId" value="">
-
+                    
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div class="md:col-span-2">
                             <label class="block text-xs font-bold text-gray-600 mb-1">Nome do Medicamento *</label>
@@ -153,7 +158,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label class="block text-xs font-bold text-gray-600 mb-1">Horário Principal / Intervalo *</label>
-                            <input type="text" id="medSchedule" placeholder="Ex: 08:00 ou De 8/8h" required class="w-full px-4 py-2 rounded-xl border-2 border-gray-100 focus:border-pastelBlue focus:outline-none text-sm bg-gray-50/50">
+                            <input type="text" id="medSchedule" placeholder="Ex: 08:00 e 20:00 ou De 8/8h" required class="w-full px-4 py-2 rounded-xl border-2 border-gray-100 focus:border-pastelBlue focus:outline-none text-sm bg-gray-50/50">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-600 mb-1">Data de Início *</label>
@@ -167,38 +172,36 @@
 
                     <div>
                         <label class="block text-xs font-bold text-gray-600 mb-1">Observações / Recomendações</label>
-                        <input type="text" id="medNotes" placeholder="Ex: Tomar após as refeições" class="w-full px-4 py-2 rounded-xl border-2 border-gray-100 focus:border-pastelBlue focus:outline-none text-sm bg-gray-50/50">
+                        <input type="text" id="medNotes" placeholder="Ex: Tomar após as refeições, com bastante água" class="w-full px-4 py-2 rounded-xl border-2 border-gray-100 focus:border-pastelBlue focus:outline-none text-sm bg-gray-50/50">
                     </div>
 
-                    <div class="flex justify-end gap-2">
+                    <div class="flex justify-end">
                         <button type="submit" id="saveMedBtn" class="px-6 py-2.5 bg-pastelBlue hover:bg-pastelBlueDark text-teal-900 font-bold rounded-2xl transition duration-200 shadow-sm flex items-center gap-2 text-sm">
-                            <i class="fa-solid fa-floppy-disk"></i> <span id="saveMedBtnText">Salvar Medicamento</span>
+                            <i class="fa-solid fa-floppy-disk"></i> Salvar Medicamento
                         </button>
                     </div>
                 </form>
             </div>
         </div>
 
-        <!-- Main Table Section -->
         <section class="bg-white rounded-3xl p-6 border-2 border-pastelYellow custom-shadow overflow-hidden">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
                 <div class="flex items-center space-x-3">
                     <span class="w-10 h-10 rounded-2xl bg-pastelYellow text-yellow-700 flex items-center justify-center font-bold text-lg">
                         <i class="fa-solid fa-table-list"></i>
                     </span>
                     <div>
                         <h2 class="font-display text-2xl font-bold text-gray-800">Quadro Principal de Medicamentos</h2>
-                        <p class="text-xs text-gray-500">Acompanhamento dos seus medicamentos e rotina de doses</p>
+                        <p class="text-xs text-gray-500">Visualização semanal estilizada dos medicamentos agendados</p>
                     </div>
                 </div>
 
-                <!-- Sort Control -->
-                <div class="flex items-center gap-2 bg-gray-50 p-2 rounded-2xl border border-gray-200">
-                    <i class="fa-solid fa-sort text-gray-500 text-xs pl-2"></i>
-                    <span class="text-xs font-bold text-gray-600">Ordenar por:</span>
-                    <select id="sortOption" onchange="changeSortOption(this.value)" class="bg-white border border-gray-200 rounded-xl px-3 py-1 text-xs font-semibold focus:outline-none text-gray-700">
-                        <option value="name">Ordem Alfabética (A-Z)</option>
+                <!-- Filtro / Ordenacao -->
+                <div class="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-2xl border border-gray-200 text-xs">
+                    <span class="font-bold text-gray-600"><i class="fa-solid fa-arrow-down-a-z"></i> Ordenar por:</span>
+                    <select id="sortOption" onchange="renderMedsTable()" class="bg-transparent font-medium text-gray-700 border-none focus:outline-none cursor-pointer">
                         <option value="schedule">Horário Agendado</option>
+                        <option value="name">Nome (A-Z)</option>
                     </select>
                 </div>
             </div>
@@ -273,45 +276,31 @@
 
     </main>
 
-    <!-- Modal para Pergunta de Cuidados e Frase Motivacional -->
-    <div id="careModal" class="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 hidden p-4">
-        <div class="bg-white rounded-3xl max-w-md w-full p-6 border-4 border-pastelPink custom-shadow animate-fade-in relative">
-            <div class="text-center space-y-4">
-                <div class="w-16 h-16 bg-pastelPink rounded-full flex items-center justify-center text-pink-600 text-3xl mx-auto shadow-inner">
-                    <i class="fa-solid fa-heart-pulse"></i>
+    <div id="confirmModal" class="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 hidden p-4">
+        <div class="bg-white rounded-3xl p-6 max-w-md w-full border-4 border-pastelPink custom-shadow transform transition-all">
+            <div class="text-center space-y-3">
+                <div class="w-16 h-16 rounded-full bg-pastelPink text-pink-600 mx-auto flex items-center justify-center text-3xl shadow-inner">
+                    <i class="fa-solid fa-heart"></i>
                 </div>
-                
-                <h3 class="font-display text-2xl font-bold text-gray-800">Dose Registrada com Sucesso!</h3>
-
-                <!-- Frase Motivacional -->
-                <div class="bg-pastelYellow/50 border border-pastelYellow rounded-2xl p-4 text-sm font-semibold text-amber-900 italic">
-                    "<span id="motivationalQuote">Você está fazendo um ótimo trabalho cuidando de você!</span>"
-                </div>
-
-                <div class="text-left space-y-3 pt-2">
-                    <p class="text-xs font-bold text-gray-600 uppercase tracking-wider text-center">Check-list de Autocuidado:</p>
-
-                    <label class="flex items-center gap-3 p-3 rounded-2xl border-2 border-gray-100 hover:border-pastelGreen cursor-pointer transition">
-                        <input type="checkbox" id="checkAte" class="care-checkbox hidden">
-                        <div class="w-6 h-6 rounded-lg border-2 border-gray-300 flex items-center justify-center text-emerald-600 font-bold transition">
-                            <i class="fa-solid fa-check text-xs hidden"></i>
-                        </div>
-                        <span class="text-sm font-medium text-gray-700">Já comeu alguma coisa para acompanhar? 🥪</span>
+                <h3 class="font-display text-2xl font-bold text-gray-800">Dose Concluída! ✨</h3>
+                <p id="modalAffirmation" class="text-sm font-medium text-pink-700 bg-pastelPink/30 p-3 rounded-2xl italic">
+                    "Você está cuidando muito bem de você!"
+                </p>
+                <div class="text-left bg-gray-50 p-4 rounded-2xl border border-gray-100 text-xs space-y-2 text-gray-600">
+                    <p class="font-bold text-gray-700 border-b pb-1">Lembretes de Autocuidado:</p>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" checked class="rounded text-pink-500 focus:ring-pink-300">
+                        <span>Já se alimentou ou comeu algo leve?</span>
                     </label>
-
-                    <label class="flex items-center gap-3 p-3 rounded-2xl border-2 border-gray-100 hover:border-pastelBlue cursor-pointer transition">
-                        <input type="checkbox" id="checkWater" class="care-checkbox hidden">
-                        <div class="w-6 h-6 rounded-lg border-2 border-gray-300 flex items-center justify-center text-teal-600 font-bold transition">
-                            <i class="fa-solid fa-check text-xs hidden"></i>
-                        </div>
-                        <span class="text-sm font-medium text-gray-700">Tomou bastante água? 💧</span>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" checked class="rounded text-pink-500 focus:ring-pink-300">
+                        <span>Tomou um copo cheio de água?</span>
                     </label>
                 </div>
-
-                <button onclick="closeCareModal()" class="w-full py-3 bg-pastelGreen hover:bg-pastelGreenDark text-emerald-950 font-bold rounded-2xl transition duration-200 shadow-sm text-sm mt-4">
-                    Concluir Registros <i class="fa-solid fa-face-smile ml-1"></i>
-                </button>
             </div>
+            <button onclick="closeConfirmModal()" class="w-full mt-5 py-3 bg-pastelPink hover:bg-pastelPinkDark text-pink-900 font-bold rounded-2xl transition shadow-sm text-sm">
+                Continuar Mandando Bem! ❤️
+            </button>
         </div>
     </div>
 
@@ -319,20 +308,14 @@
         // Data Structures
         let medications = [];
         let logs = [];
-        let currentSort = 'name'; // 'name' or 'schedule'
-        let pendingLogData = null;
 
-        // Frases Motivacionais de Apoio
-        const motivationalQuotes = [
-            "Cada dose tomada é um passo de amor-próprio e cuidado com a sua saúde!",
-            "Você é mais forte do que pensa e seu corpo agradece esse carinho!",
-            "Parabéns pelo compromisso com seu bem-estar. Continue firme!",
-            "Pequenos hábitos diários constroem uma vida saudável e feliz!",
-            "Cuidar de você é a prioridade mais importante. Você está no caminho certo!",
-            "Orgulhe-se de cada pequeno passo no seu tratamento!",
-            "Mantenha o foco! O cuidado constante de hoje traz a saúde de amanhã.",
-            "Um dia de cada vez, um cuidado de cada vez. Você está indo super bem!",
-            "Seu corpo é seu lar: cuide bem dele com todo esse amor!"
+        // Affirmations
+        const cutePhrases = [
+            "Você é incrível por cuidar do seu bem-estar todos os dias! ✨",
+            "Sua saúde é o seu maior bem. Parabéns pela dedicação! ❤️",
+            "Mais um passo importante para se sentir leve e saudável! 🌸",
+            "Que orgulho de ver você mantendo suas rotinas em dia! 🌟",
+            "Continue assim! Seu corpo e sua mente agradecem carinhosamente. 🥰"
         ];
 
         // DOM Elements
@@ -344,14 +327,6 @@
         const nextDosesList = document.getElementById('nextDosesList');
         const currentDateDisplay = document.getElementById('currentDateDisplay');
         const quickLogAlert = document.getElementById('quickLogAlert');
-
-        // Form elements for editing
-        const formTitle = document.getElementById('formTitle');
-        const formIcon = document.getElementById('formIcon');
-        const formBadge = document.getElementById('formBadge');
-        const saveMedBtnText = document.getElementById('saveMedBtnText');
-        const editingMedId = document.getElementById('editingMedId');
-        const cancelEditBtn = document.getElementById('cancelEditBtn');
 
         // Initialize App
         window.addEventListener('DOMContentLoaded', () => {
@@ -365,21 +340,7 @@
 
             loadDataFromStorage();
             renderAll();
-            setupCheckboxStyle();
         });
-
-        function setupCheckboxStyle() {
-            document.querySelectorAll('.care-checkbox').forEach(chk => {
-                chk.addEventListener('change', (e) => {
-                    const icon = e.target.nextElementSibling.querySelector('i');
-                    if (e.target.checked) {
-                        icon.classList.remove('hidden');
-                    } else {
-                        icon.classList.add('hidden');
-                    }
-                });
-            });
-        }
 
         // Load & Save to LocalStorage
         function loadDataFromStorage() {
@@ -389,7 +350,6 @@
             if (savedMeds) {
                 try { medications = JSON.parse(savedMeds); } catch(e) { medications = []; }
             } else {
-                // Sample initial data if empty
                 medications = [
                     {
                         id: '1',
@@ -404,10 +364,10 @@
                         id: '2',
                         name: 'Omega 3',
                         dosage: '1 cápsula',
-                        schedule: '12:00',
+                        schedule: '12:00 e 20:00',
                         startDate: new Date().toISOString().split('T')[0],
                         endDate: '',
-                        notes: 'Junto com as refeições'
+                        notes: 'Junto com as refeições principais'
                     }
                 ];
                 saveMedsStorage();
@@ -426,51 +386,90 @@
             localStorage.setItem('meds_app_logs', JSON.stringify(logs));
         }
 
+        // Export Backup JSON
+        function exportBackup() {
+            const backupData = {
+                version: 1,
+                exportDate: new Date().toISOString(),
+                medications: medications,
+                logs: logs
+            };
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+            const downloadAnchor = document.createElement('a');
+            const fileName = `backup_medicamentos_${new Date().toISOString().split('T')[0]}.json`;
+
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", fileName);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+
+            showAlert('Backup baixado com sucesso!', 'success');
+        }
+
+        // Import Backup JSON
+        function importBackup(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data && Array.isArray(data.medications) && Array.isArray(data.logs)) {
+                        medications = data.medications;
+                        logs = data.logs;
+                        saveMedsStorage();
+                        saveLogsStorage();
+                        renderAll();
+                        showAlert('Backup restaurado com sucesso!', 'success');
+                    } else {
+                        showAlert('Arquivo de backup inválido!', 'danger');
+                    }
+                } catch(err) {
+                    showAlert('Erro ao ler o arquivo JSON de backup.', 'danger');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = ''; // Reset input
+        }
+
         // Add or Update Medication
         medForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const id = editingMedId.value;
+            const editId = document.getElementById('editingMedId').value;
 
-            const name = document.getElementById('medName').value.trim();
-            const dosage = document.getElementById('medDosage').value.trim();
-            const schedule = document.getElementById('medSchedule').value.trim();
-            const startDate = document.getElementById('medStartDate').value;
-            const endDate = document.getElementById('medEndDate').value;
-            const notes = document.getElementById('medNotes').value.trim();
+            const medData = {
+                id: editId || Date.now().toString(),
+                name: document.getElementById('medName').value.trim(),
+                dosage: document.getElementById('medDosage').value.trim(),
+                schedule: document.getElementById('medSchedule').value.trim(),
+                startDate: document.getElementById('medStartDate').value,
+                endDate: document.getElementById('medEndDate').value,
+                notes: document.getElementById('medNotes').value.trim()
+            };
 
-            if (id) {
-                // Edit existing
-                const index = medications.findIndex(m => m.id === id);
-                if (index !== -1) {
-                    medications[index] = { id, name, dosage, schedule, startDate, endDate, notes };
-                    showAlert(`Medicamento "${name}" atualizado com sucesso!`, 'success');
-                }
+            if (editId) {
+                const idx = medications.findIndex(m => m.id === editId);
+                if (idx !== -1) medications[idx] = medData;
+                showAlert('Medicamento atualizado com sucesso!', 'success');
             } else {
-                // Create new
-                const newMed = {
-                    id: Date.now().toString(),
-                    name,
-                    dosage,
-                    schedule,
-                    startDate,
-                    endDate,
-                    notes
-                };
-                medications.push(newMed);
-                showAlert(`Medicamento "${name}" cadastrado com sucesso!`, 'success');
+                medications.push(medData);
+                showAlert('Medicamento cadastrado com sucesso!', 'success');
             }
 
             saveMedsStorage();
-            cancelEdit();
+            resetMedForm();
             renderAll();
         });
 
-        // Edit Medication Trigger
+        // Edit Medication Handler
         function editMedication(id) {
             const med = medications.find(m => m.id === id);
             if (!med) return;
 
-            editingMedId.value = med.id;
+            document.getElementById('editingMedId').value = med.id;
             document.getElementById('medName').value = med.name;
             document.getElementById('medDosage').value = med.dosage;
             document.getElementById('medSchedule').value = med.schedule;
@@ -478,29 +477,22 @@
             document.getElementById('medEndDate').value = med.endDate || '';
             document.getElementById('medNotes').value = med.notes || '';
 
-            // Update Form Header
-            formTitle.textContent = 'Editar Medicamento';
-            formIcon.className = 'fa-solid fa-pen-to-square';
-            formBadge.className = 'w-8 h-8 rounded-full bg-pastelYellow text-yellow-800 flex items-center justify-center font-bold text-sm';
-            saveMedBtnText.textContent = 'Atualizar Medicamento';
-            cancelEditBtn.classList.remove('hidden');
-
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            document.getElementById('formTitle').textContent = 'Editar Medicamento';
+            document.getElementById('formIcon').className = 'fa-solid fa-pen-to-square';
+            document.getElementById('cancelEditBtn').classList.remove('hidden');
+            document.getElementById('medName').focus();
         }
 
-        function cancelEdit() {
-            editingMedId.value = '';
+        function resetMedForm() {
             medForm.reset();
+            document.getElementById('editingMedId').value = '';
+            document.getElementById('formTitle').textContent = 'Cadastrar Novo Medicamento';
+            document.getElementById('formIcon').className = 'fa-solid fa-plus';
+            document.getElementById('cancelEditBtn').classList.add('hidden');
             document.getElementById('medStartDate').value = new Date().toISOString().split('T')[0];
-
-            formTitle.textContent = 'Cadastrar Novo Medicamento';
-            formIcon.className = 'fa-solid fa-plus';
-            formBadge.className = 'w-8 h-8 rounded-full bg-pastelBlue text-teal-700 flex items-center justify-center font-bold text-sm';
-            saveMedBtnText.textContent = 'Salvar Medicamento';
-            cancelEditBtn.classList.add('hidden');
         }
 
-        // Log Taken Dose (Triggers Modal with Motivational Quote & Checkboxes)
+        // Log Taken Dose
         quickLogForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const medId = logMedSelect.value;
@@ -510,59 +502,39 @@
             const date = document.getElementById('logDate').value;
             const time = document.getElementById('logTime').value;
 
-            pendingLogData = {
+            const newLog = {
                 id: Date.now().toString(),
                 medId: selectedMed.id,
                 medName: selectedMed.name,
                 dosage: selectedMed.dosage,
                 timestamp: new Date(`${date}T${time}`).getTime(),
                 dateStr: date,
-                timeStr: time,
-                ate: false,
-                water: false
+                timeStr: time
             };
 
-            // Random motivational quote
-            const randomQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
-            document.getElementById('motivationalQuote').textContent = randomQuote;
+            logs.unshift(newLog);
+            saveLogsStorage();
 
-            // Reset modal checkboxes
-            document.getElementById('checkAte').checked = false;
-            document.getElementById('checkWater').checked = false;
-            document.querySelectorAll('#careModal i.fa-check').forEach(i => i.classList.add('hidden'));
-
-            // Show modal
-            document.getElementById('careModal').classList.remove('hidden');
+            renderAll();
+            showConfirmModal();
         });
 
-        function closeCareModal() {
-            if (pendingLogData) {
-                pendingLogData.ate = document.getElementById('checkAte').checked;
-                pendingLogData.water = document.getElementById('checkWater').checked;
-
-                logs.unshift(pendingLogData);
-                saveLogsStorage();
-
-                showAlert(`Dose de ${pendingLogData.medName} registrada com sucesso!`, 'success');
-                pendingLogData = null;
-                renderAll();
-            }
-            document.getElementById('careModal').classList.add('hidden');
+        // Confirmation Modal Functions
+        function showConfirmModal() {
+            const randomPhrase = cutePhrases[Math.floor(Math.random() * cutePhrases.length)];
+            document.getElementById('modalAffirmation').textContent = `"${randomPhrase}"`;
+            document.getElementById('confirmModal').classList.remove('hidden');
         }
 
-        // Sort Control
-        function changeSortOption(option) {
-            currentSort = option;
-            renderMedsTable();
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.add('hidden');
         }
 
         // Delete Medication
         function deleteMedication(id) {
-            if (confirm('Deseja realmente remover este medicamento do seu quadro?')) {
-                medications = medications.filter(m => m.id !== id);
-                saveMedsStorage();
-                renderAll();
-            }
+            medications = medications.filter(m => m.id !== id);
+            saveMedsStorage();
+            renderAll();
         }
 
         // Delete Log
@@ -594,13 +566,13 @@
                 return;
             }
 
-            // Sort Medications List
-            let sortedMeds = [...medications];
-            if (currentSort === 'name') {
-                sortedMeds.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' }));
-            } else if (currentSort === 'schedule') {
-                sortedMeds.sort((a, b) => a.schedule.localeCompare(b.schedule, 'pt-BR', { numeric: true }));
-            }
+            const sortBy = document.getElementById('sortOption')?.value || 'schedule';
+            const sortedMeds = [...medications].sort((a, b) => {
+                if (sortBy === 'name') {
+                    return a.name.localeCompare(b.name);
+                }
+                return a.schedule.localeCompare(b.schedule);
+            });
 
             const today = new Date();
             const currentWeekDays = getDaysOfWeek(today);
@@ -612,11 +584,10 @@
                 const startFormatted = med.startDate ? formatDatePt(med.startDate) : '-';
                 const endFormatted = med.endDate ? formatDatePt(med.endDate) : 'Contínuo';
 
-                // Check logged days for week indicator (D S T Q Q S S)
                 const weekDots = currentWeekDays.map(d => {
                     const hasLogged = logs.some(l => l.medId === med.id && l.dateStr === d.iso);
                     const colorClass = hasLogged ? 'bg-emerald-400 ring-2 ring-emerald-200' : 'bg-gray-200';
-                    return `<span class="w-3.5 h-3.5 rounded-full inline-block ${colorClass}" title="${d.label} (${d.iso}) - ${hasLogged ? 'Tomado' : 'Não registrado'}"></span>`;
+                    return `<span class="w-3.5 h-3.5 rounded-full inline-block ${colorClass}" title="${d.label} ${d.iso}"></span>`;
                 }).join('');
 
                 tr.innerHTML = `
@@ -632,11 +603,11 @@
                         </div>
                     </td>
                     <td class="p-3 text-center">
-                        <div class="flex items-center justify-center space-x-2">
-                            <button onclick="editMedication('${med.id}')" class="text-gray-400 hover:text-amber-600 transition p-1" title="Editar Medicamento">
+                        <div class="flex justify-center gap-2">
+                            <button onclick="editMedication('${med.id}')" class="text-gray-400 hover:text-teal-600 transition p-1" title="Editar">
                                 <i class="fa-solid fa-pen-to-square"></i>
                             </button>
-                            <button onclick="deleteMedication('${med.id}')" class="text-gray-400 hover:text-red-500 transition p-1" title="Excluir Medicamento">
+                            <button onclick="deleteMedication('${med.id}')" class="text-gray-400 hover:text-red-500 transition p-1" title="Excluir">
                                 <i class="fa-solid fa-trash-can"></i>
                             </button>
                         </div>
@@ -653,13 +624,10 @@
                 return;
             }
 
-            // Always alphabetize in selector for ease of use
-            const sortedForSelect = [...medications].sort((a,b) => a.name.localeCompare(b.name));
-
-            sortedForSelect.forEach(med => {
+            medications.forEach(med => {
                 const opt = document.createElement('option');
                 opt.value = med.id;
-                opt.textContent = `${med.name} (${med.dosage}) - ${med.schedule}`;
+                opt.textContent = `${med.name} (${med.dosage})`;
                 logMedSelect.appendChild(opt);
             });
         }
@@ -683,18 +651,13 @@
                 
                 const formattedDate = formatDatePt(log.dateStr);
 
-                const careBadges = [];
-                if (log.ate) careBadges.push('<span title="Comeu algo">🥪</span>');
-                if (log.water) careBadges.push('<span title="Tomou água">💧</span>');
-                const careHtml = careBadges.length > 0 ? `<span class="ml-2">${careBadges.join(' ')}</span>` : '';
-
                 item.innerHTML = `
                     <div class="flex items-center space-x-3">
                         <div class="w-8 h-8 rounded-xl bg-pastelPurple text-purple-700 flex items-center justify-center font-bold">
                             <i class="fa-solid fa-check text-xs"></i>
                         </div>
                         <div>
-                            <span class="font-bold text-gray-800 text-sm block flex items-center">${escapeHtml(log.medName)} ${careHtml}</span>
+                            <span class="font-bold text-gray-800 text-sm block">${escapeHtml(log.medName)}</span>
                             <span class="text-gray-500">${escapeHtml(log.dosage)} • <i class="fa-regular fa-clock"></i> ${log.timeStr}</span>
                         </div>
                     </div>
@@ -730,7 +693,7 @@
                 if (lastLog) {
                     const lastDate = new Date(lastLog.timestamp);
                     const hoursDiff = Math.abs(now - lastDate) / 36e5;
-                    nextEstimateText = `Última dose há ${Math.floor(hoursDiff)}h (às ${lastLog.timeStr} de ${formatDatePt(lastLog.dateStr)})`;
+                    nextEstimateText = `Última dose registrada há ${Math.floor(hoursDiff)}h (às ${lastLog.timeStr} de ${formatDatePt(lastLog.dateStr)})`;
                 } else {
                     nextEstimateText = `Horário agendado: ${med.schedule}`;
                 }
@@ -760,7 +723,7 @@
         // Utilities
         function getDaysOfWeek(refDate) {
             const curr = new Date(refDate);
-            const first = curr.getDate() - curr.getDay(); // Sunday as first day
+            const first = curr.getDate() - curr.getDay();
             
             const days = [];
             const labels = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
@@ -803,7 +766,7 @@
 
             setTimeout(() => {
                 quickLogAlert.className = 'hidden';
-            }, 3500);
+            }, 3000);
         }
     </script>
 </body>
